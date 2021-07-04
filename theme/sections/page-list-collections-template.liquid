@@ -1,0 +1,117 @@
+{%- assign menu_links = linklists[page.handle].links -%}
+<div data-section-id="{{ section.id }}" data-section-type="list-collections" class="list-collections standard-page">
+  <h1 class="large-title">{{ page.title }}</h1>
+
+  {% if section.settings.layout == 'blocks' %}
+
+    <div class="grid grid--uniform">
+      {% for link in menu_links %}
+        {%- assign collection = link.object -%}
+        <div class="grid__item one-third small-down--one-whole collection-list__container" {{ block.shopify_attributes }}>
+          {% render 'collection-block', borders: section.settings.show_border, collection: collection, alternative_image: false %}
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+
+    <div class="list-collections__rows-container">
+      {% for link in menu_links %}
+        {%- assign collection = link.object -%}
+        {% assign header_image = collection.image | default: collection.products.first.featured_media.preview_image %}
+        {%- if block.settings.alternative_image -%}
+          {%- assign header_image = block.settings.alternative_image -%}
+        {% endif %}
+        <div class="collection-row-header row-double-space">
+          {% if collection.image != blank and section.settings.crop != 'hidden' %}
+            <a href="{{ collection.url }}">
+              {% unless section.settings.crop == 'none' %}
+                <div class="global-border-radius banner-image banner-image--crop banner-image--crop-{{ section.settings.crop }}">
+                  <div class="rimage-background fade-in lazyload"
+                    data-bgset="{% render 'bgset', image: header_image %}"
+                    data-sizes="auto"
+                    data-parent-fit="cover">
+                    <noscript>
+                      <img src="{{ header_image | img_url: '1024x1024' }}" alt="{{ header_image.alt | escape }}" class="rimage-background__image">
+                    </noscript>
+                  </div>
+                </div>
+              {% else %}
+                <div class="global-border-radius banner-image">
+                  {% render 'responsive-image' image: header_image %}
+                </div>
+              {% endunless %}
+            </a>
+          {% endif %}
+
+          <h1 class="standard-title collection-title">
+            <a href="{{ collection.url }}">{{ collection.title }}</a>
+          </h1>
+
+          {% if collection.description != blank %}
+            <div class="collection-description rte clearfix">
+              {{ collection.description }}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+
+</div>
+
+
+{% schema %}
+  {
+    "name": "Collections list pages",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Use this template to create a curated list of collections. [Learn more](https://cleancanvas.co.uk/support/general/page-list-collections)"
+      },
+      {
+        "type": "radio",
+        "id": "layout",
+        "label": "Layout",
+        "default": "blocks",
+        "options": [
+          {
+            "value": "blocks",
+            "label": "Grid"
+          },
+          {
+            "value": "rows",
+            "label": "Rows"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "Grid layout"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_border",
+        "label": "Show borders",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "Row layout"
+      },
+      {
+        "type": "radio",
+        "id": "crop",
+        "label": "Featured image crop",
+        "options": [
+          { "value": "top", "label": "Top crop" },
+          { "value": "bottom", "label": "Bottom crop" },
+          { "value": "middle", "label": "Center crop" },
+          { "value": "none", "label": "No crop" }
+        ],
+        "default": "middle"
+      }
+    ]
+  }
+{% endschema %}

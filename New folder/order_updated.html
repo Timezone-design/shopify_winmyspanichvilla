@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous"></script>  <title>Order download</title>
+    <style>
+      a#order_export {
+        text-decoration: none;
+        background: lightgray;
+      }
+      .active {
+        pointer-events:none;
+        background: #999 !important;
+      }
+    </style>
+  </head>
+  <body style="margin: 0;">
+    <div style="width: 100vw; height: 100vh; background: rgba(0,0,0, 0.7); position: relative;">
+      <div id="export_btn" style="width: 80%; position: absolute; left: 50%; margin-left: -40%; top: 50%; transform: translateY(-50%); background: #ffffff; padding: 40px 10px; text-align: center;">
+        <button style="margin: auto; display: block; background: rgb(23, 168, 190); padding: 15px 20px; border: none; border-radius: 5px; color: #ffffff; box-shadow: 0 0 5px #999; border: 1px solid gray;font-size: 30px;" id="export_btn" name="enable">Export to CSV file</button>
+        <a href="#" download="order_export.csv" id="order_export" style="display: none; margin-top: 8px;">Download CSV File</a>
+        <p style="color: red; font-weight: bold; display: none;">Failed!</p>
+        <div id="link"></div>
+      </div>
+    </div>
+  </body>
+  <script>
+      $("button#export_btn").click(function() {
+        $(this).addClass('active');
+        let csvContent = 'Order Name, Customer Name, Email, Date, Financial Status, Country, Ticket Name, Ticket Number' + '\r\n';
+        var orders;
+
+        $.ajax({
+          url: 'https://shopify-proxy.herokuapp.com/https://9c2b715e13fb55d6fa3a969f4d49a3c1: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@winmyspanishvilla.myshopify.com/admin/api/2021-01/orders.json?status=any',
+          data: {},
+          type: 'GET',
+          headers: {'X-Shopify-Access-Token': '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', 'Access-Control-Allow-Origin':'*'},
+          success: function (res) {
+            orders = res.orders;
+            console.log(orders);
+            orders.forEach(order => {
+              var email = order.contact_email;
+              var financial_status = order.financial_status;
+              var created_at = order.created_at;
+              var order_name = order.name;
+              var username = order.billing_address.name;
+              var country = order.billing_address.country;
+              var product_name = order.line_items[0].name;
+              var ticket_numbers = order.line_items[0].properties[0].value.split('\r\n');
+  
+              ticket_numbers.forEach(ticket_number => {
+                let row = order_name + ',' + username + ',' + email + ',' + created_at + ',' + financial_status + ',' + country + ',' + product_name + ',' + '#' + ticket_number;
+                csvContent += row + "\r\n";
+              });
+            });
+            var file = new File([csvContent], "myfilename.txt", {type:"application/octet-stream"});
+            var blobUrl = (URL || webkitURL).createObjectURL(file);
+            $("a#order_export").show();
+            $("a#order_export").attr('href', blobUrl);
+            $("button#export_btn").removeClass('active');
+            $("p").hide();
+          },
+          error: function(xhr, status, error) {
+            console.log(status);
+            $("button#export_btn").removeClass('active');
+            $("p").show();
+          }
+        });
+      });
+  </script>
+</html>

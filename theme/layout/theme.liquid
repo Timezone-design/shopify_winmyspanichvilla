@@ -1,0 +1,146 @@
+<!doctype html>
+<html class="no-js supports-no-cookies" lang="{{ shop.locale }}">
+<head>
+  <!-- Expression 5.4.13 -->
+  {% render 'head-tag' %}
+  <meta name="theme-color" content="{{ settings.color_primary }}">
+
+  {% capture seo_title %}
+    {{ page_title }}
+    {% if current_tags %}
+      {%- assign meta_tags = current_tags | join: ', ' %} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags -}}
+    {% endif %}
+    {% if current_page != 1 %}
+      &ndash; {{ 'general.meta.page' | t: page: current_page }}
+    {% endif %}
+    {% unless page_title contains shop.name %}
+      &ndash; {{ shop.name }}
+    {% endunless %}
+  {% endcapture %}
+  <title>{{ seo_title }}</title>
+
+  {% render 'social-meta-tags' %}
+
+  {{ 'styles.css' | asset_url | stylesheet_tag }}
+  <script src="https://assets.cloudlift.app/api/assets/upload.js?shop=winmyspanishvilla.myshopify.com"></script>
+  <script>
+    document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
+    window.theme = window.theme || {};
+    window.slate = window.slate || {};
+    theme.moneyFormat = {{ shop.money_format | json }};
+    theme.strings = {
+      addToCart: {{ 'products.product.add_to_cart' | t | json }},
+      soldOut: {{ 'products.product.sold_out' | t | json }},
+      unavailable: {{ 'products.product.unavailable' | t | json }},
+      addressError: {{ 'map.errors.address_error' | t | json }},
+      addressNoResults: {{ 'map.errors.address_no_results' | t | json }},
+      addressQueryLimit: {{ 'map.errors.address_query_limit_html' | t | json }},
+      authError: {{ 'map.errors.auth_error' | t | json }},
+      addingToCart: {{ 'products.product.adding_to_cart' | t | json }},
+      addedToCart: {{ 'products.product.added' | t | json }},
+      goToCart: {{ 'products.product.go_to_cart' | t | json }},
+      cart: {{ 'layout.cart.title' | t | json }},
+      cartTermsNotChecked: {{ 'cart.terms.confirmation' | t | json }},
+      quantityTooHigh: {{ 'cart.general.quantity_too_high' | t: quantity: '[[ quantity ]]' | json }},
+      unitPriceSeparator: {{ 'products.product.unit_price_separator' | t | json }},
+      searchResultsPages: {{ 'general.quick_search.pages' | t | json }},
+      searchResultsViewAll: {{ 'general.quick_search.view_all' | t | json }},
+      searchResultsNoResults: {{ 'general.quick_search.no_results' | t | json }},
+      previous: {{'general.accessibility_labels.previous' | t | json }},
+      next: {{'general.accessibility_labels.next' | t | json }},
+      cart_shipping_calculator_hide_calculator: {{ 'cart.shipping_calculator.hide_calculator' | t | json }},
+      cart_shipping_calculator_title: {{ 'cart.shipping_calculator.title' | t | json }},
+      cart_general_hide_note: {{ 'cart.general.hide_note' | t | json }},
+      cart_general_show_note: {{ 'cart.general.show_note' | t | json }},
+      inventoryNotice: {{ 'products.labels.only_x_left' | t: quantity: '[[ quantity ]]' | json }},
+      imageSlider: {{ 'general.slider.images' | t | json }}
+    };
+    theme.routes = {
+      account_addresses_url: '{{ routes.account_addresses_url }}',
+      search_url: '{{ routes.search_url }}',
+      cart_url: '{{ routes.cart_url }}',
+      cart_add_url: '{{ routes.cart_add_url }}',
+      cart_change_url: '{{ routes.cart_change_url }}'
+    }
+  </script>
+
+  {% if template.directory == 'customers' %}
+    <script src="{{ 'shopify_common.js' | shopify_asset_url }}" defer="defer"></script>
+  {% endif %}
+
+  <script src="{{ 'vendor.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'theme.js' | asset_url }}" defer="defer"></script>
+
+  {{ content_for_header }}
+</head>
+
+<body id="{{ page_title | handle }}" class="template-{{ template.name | handle }}">
+
+  <a class="in-page-link visually-hidden skip-link" href="#MainContent">{{ 'general.accessibility.skip_to_content' | t }}</a>
+
+  {% section 'header' %}
+
+  {% render 'breadcrumbs' %}
+
+  <main id="MainContent">
+    {% unless template contains 'index' or template contains 'blog' or template contains 'article' %}<div class="page-width container page-content">{% endunless %}
+      {{ content_for_layout }}
+    {% unless template contains 'index' or template contains 'blog' or template contains 'article' %}</div>{% endunless %}
+  </main>
+
+  {% section 'footer' %}
+  {% section 'popup' %}
+
+  {% if template contains 'product' or template contains 'index' %}{% render 'photoswipe' %}{% endif %}
+  {% render 'body-end-tag' %}
+{% include 'socialboost-widgets' %} </body>
+<script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"></script>
+<script>
+  $(document).ready(function() {
+  {% if request.page_type contains 'cart' %}
+    var interval = setInterval(function(){
+      if($('div.quantity-adjuster a[aria-label="Minus"]')) {
+        clearInterval(interval);
+        var productName = $("div.cart-item-description a").text();
+        var words = productName.split(' ');
+        var count = 0;
+        for(var i = 0; i < words.length; i ++) {
+          if(!isNaN(parseInt(words[i]))) {
+              count += parseInt(words[i]);
+          }
+        }
+        if(count == 5 || count == 13 || count == 27 || count == 70 || count == 150 || count== 320) {
+          var action = $("div.cart-items.row").parent().attr('action') + '?discount=' + count;
+          $("div.cart-items.row").parent().attr('action', action);
+        }
+      }
+    } , 100);
+    {% endif %}
+    {% if request.page_type contains 'product' %}
+      console.log('asdfasdfasdf',  {{cart.item_count}});
+      var item_count = {{ cart.item_count }};
+      
+      $("button[name='add']").attr('type', 'button');
+      $("button[name='add']").click(function() {
+        console.log('asdfasdfasdf',  item_count);
+        if(item_count > 0) {
+          $("div#cartAlert").fadeIn(500);
+        } else {
+          $("form[id^='product_form']").submit();
+          item_count ++;
+        }
+      });
+      $("div#cartAlert").click(function() {
+        $(this).fadeOut(500);
+      });
+
+    {% endif %}
+  });
+</script>
+
+
+</html>
+

@@ -1,0 +1,103 @@
+{% paginate search.results by section.settings.pagination_limit %}
+  <div class="standard-page">
+    <h1 class="standard-title">{{ 'general.search.title' | t }}</h1>
+
+    <div class="search-bar row">
+      <form action="{{ routes.search_url }}" method="get" role="search" class="search-form">
+        <input type="hidden" name="type" value="{{ settings.search_type }}" />
+        <input type="hidden" name="options[prefix]" value="last" />
+        <span class="search-icon">{% render 'icon-search' %}</span>
+        <input class="search-form__input"
+              type="search"
+              name="q"
+              id="Search"
+              value="{{ search.terms | escape }}"
+              placeholder="{{ 'general.search.placeholder' | t }}"
+              aria-label="{{ 'general.search.placeholder' | t }}">
+        <button type="submit" class="btn btn--primary search-btn">
+          {{ 'general.search.submit' | t }}
+        </button>
+      </form>
+    </div>
+
+    {% if search.performed %}
+      <h2 class="small-title row">
+        {% if search.results_count == 0 %}
+          {{ 'general.search.no_results' | t: terms: search.terms }}
+        {% else %}
+          {{ 'general.search.results_for' | t: terms: search.terms }}
+        {% endif %}
+      </h2>
+    {% endif %}
+
+    {% if search.performed %}
+      {%- if section.settings.column_count == 2 -%}
+        {%- assign grid_class = 'one-half small-down--one-whole' -%}
+      {%- elsif section.settings.column_count == 3 -%}
+        {%- assign grid_class = 'one-third small-down--one-half' -%}
+      {%- elsif section.settings.column_count == 4 -%}
+        {%- assign grid_class = 'one-quarter small-down--one-half' -%}
+      {%- endif -%}
+
+      <div class="product-grid-container">
+        <div class="grid grid--uniform product-grid--rows product-grid">
+          {% for item in search.results %}
+            {% if item.object_type == 'product' %}
+              {% render 'product-block', product: item, grid_class: grid_class %}
+            {% else %}
+              <div class="grid__item {{ grid_class }}">
+                <div class="rte">
+                  <h4>{{ item.title }}</h4>
+                  <p>{{ item.content | strip_html | truncatewords: 40 }}</p>
+                </div>
+                <div class="row-half-space">
+                  <a class="standard-link" href="{{ item.url }}">{{ 'blogs.article.read_more' | t }}</a>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if paginate.pages > 1 %}
+        {% render 'pagination', paginate: paginate %}
+      {% endif %}
+    {% endif %}
+  </div>
+{% endpaginate %}
+
+{% schema %}
+  {
+    "name": "Search page",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_vendor",
+        "label": "Show product vendors",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "Layout"
+      },
+      {
+        "type": "range",
+        "id": "column_count",
+        "min": 2,
+        "max": 4,
+        "step": 1,
+        "label": "Products per row",
+        "default": 4
+      },
+      {
+        "type": "range",
+        "id": "pagination_limit",
+        "min": 8,
+        "max": 48,
+        "step": 2,
+        "label": "Products per page",
+        "default": 16
+      }
+    ]
+  }
+{% endschema %}

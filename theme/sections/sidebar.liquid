@@ -1,0 +1,508 @@
+<section class="sidebar-sticky" data-section-id="{{ section.id }}" data-section-type="sidebar">
+{% if section.settings.show_sidebar and section.blocks.size > 0 %}
+
+  {%- assign has_mobile_block = false -%}
+  {%- for block in section.blocks -%}
+    {%- if block.settings.show_on_mobile -%}
+      {%- assign has_mobile_block = true -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  <div class="sidebar {% if has_mobile_block %}sidebar--has-mobile-block{% endif %} section-{{ section.id }}">
+    {% for block in section.blocks %}
+      {% case block.type %}
+        {% when 'image' %}
+          <div class="sidebar-block sidebar-block--image {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            {% if block.settings.image_url != blank %}<a href="{{ block.settings.image_url }}">{% endif %}
+              {% if block.settings.image != blank %}
+                <div class="global-border-radius">
+                  {% render 'responsive-image', image: block.settings.image %}
+                </div>
+              {% else %}
+                {{ 'image'  | placeholder_svg_tag: 'global-border-radius placeholder-svg' }}
+              {% endif %}
+            {% if block.settings.image_url != blank %}</a>{% endif %}
+          </div>
+
+        {% when 'text' %}
+          <div class="sidebar-block sidebar-block--text {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            <h2 class="small-title">{{ block.settings.title }}</h2>
+            <div class="rte">{{ block.settings.text }}</div>
+            {% if block.settings.button_text != blank and block.settings.button_url != blank %}
+              <a href="{{ block.settings.button_url }}" class="btn btn--primary btn-after-text">{{ block.settings.button_text }}</a>
+            {% endif %}
+          </div>
+
+        {% when 'page' %}
+          <div class="sidebar-block sidebar-block--page {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            {% unless block.settings.page_id == "" %}
+              <h2 class="small-title">{{ pages[block.settings.page_id].title }}</h2>
+              <p>{{ pages[block.settings.page_id].content | strip_html | truncate: 200 }}</p>
+            {% else %}
+              <h2 class="small-title">{{ 'homepage.onboarding.page_title' | t }}</h2>
+              <p>{{ 'homepage.onboarding.page_content' | t }}</p>
+            {% endunless %}
+            <p><a class="standard-link" href="{{ pages[block.settings.page_id].url }}">{{ 'homepage.sidebar.read_more' | t }}</a></p>
+          </div>
+
+        {% when 'blog' %}
+          <div class="sidebar-block sidebar-block--blog {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            {% unless block.settings.blog_id == "" %}
+              {% if block.settings.show_title %}
+                <h2 class="small-title">{{ blogs[block.settings.blog_id].title }}</h2>
+              {% endif %}
+              {% if blogs[block.settings.blog_id].articles_count > 0 %}
+                {% for article in blogs[block.settings.blog_id].articles limit: block.settings.blog_count_int %}
+                  <div class="article-summary">
+                    {% if article.image %}
+                      <div class="article-summary__image">
+                        <a class="global-border-radius sidebar-block--article-link" href="{{ article.url }}">
+                          {% render 'responsive-image', image: article.image %}
+                        </a>
+                      </div>
+                    {% endif %}
+                    {% if block.settings.show_author or block.settings.show_date %}
+                      <span class="article-meta">
+                        {% if block.settings.show_author %}
+                          <span class="article-summary__author article-meta">{{ article.author }}</span>
+                        {% endif %}
+
+                        {% if block.settings.show_author and block.settings.show_date %}
+                          <span class="article-summary__divider">&middot;</span>
+                        {% endif %}
+
+                        {% if block.settings.show_date %}
+                          <date class="article-summary__date article-meta">{{ article.published_at | date: format: 'month_day_year' }}</date>
+                        {% endif %}
+                      </span>
+                    {% endif %}
+                    <h3 class="article-summary__title subtitle"><a href="{{ article.url }}">{{ article.title | strip_html | truncate: 30 }}</a></h3>
+                    <div class="article-summary__excerpt">
+                      {% unless article.excerpt == blank %}
+                        {{ article.excerpt }}
+                      {% else %}
+                        <p>{{ article.content | strip_html | truncatewords: 20 }}</p>
+                      {% endunless %}
+                    </div>
+                    <div class="article-summary__read-more">
+                      <a class="standard-link" href="{{ article.url }}">{{ 'blogs.article.read_more' | t }}</a>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                {% for article in (1..block.settings.blog_count_int) %}
+                  <div class="article-summary">
+                    <div class="article-summary__image global-border-radius">
+                      {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+                    </div>
+                    {% if block.settings.show_date %}
+                      <date class="article-summary__date article-meta">{{ 'now' | date: format: 'month_day_year' }}</date>
+                    {% endif %}
+                    <h3 class="article-summary__title subtitle">{{ 'homepage.onboarding.article_title' | t }}</h3>
+                    <div class="article-summary__excerpt"><p>{{ 'homepage.onboarding.article_excerpt' | t }}</p></div>
+                    <div class="article-summary__read-more">
+                      <a class="standard-link" href="#">{{ 'blogs.article.read_more' | t }}</a>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% else %}
+              <h2 class="small-title">{{ 'homepage.onboarding.blog_title' | t }}</h2>
+              {% for article in (1..block.settings.blog_count_int) %}
+                <div class="article-summary">
+                  <div class="article-summary__image">{{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+                  <date class="article-summary__date article-meta">{{ 'now' | date: format: 'month_day_year' }}</date>
+                  <h3 class="article-summary__title subtitle">{{ 'homepage.onboarding.article_title' | t }}</h3>
+                  <div class="article-summary__excerpt"><p>{{ 'homepage.onboarding.article_excerpt' | t }}</p></div>
+                  <div class="article-summary__read-more">
+                    <a class="standard-link" href="#">{{ 'blogs.article.read_more' | t }}</a>
+                  </div>
+                </div>
+              {% endfor %}
+            {% endunless %}
+          </div>
+
+        {% when 'article' %}
+          <div class="sidebar-block sidebar-block--text {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            {% if block.settings.title != blank%}
+              <h2 class="small-title">{{ block.settings.title }}</h2>
+            {% endif %}
+            {% for i in (1..3) %}
+              {% capture current %}sidebar_article_{{ i }}{% endcapture %}
+              {% assign article = articles[block.settings[current]] %}
+              {% if article != blank %}
+                <div class="article-summary">
+                  {% if article.image %}
+                    <div class="article-summary__image">
+                      <a class="global-border-radius sidebar-block--article-link" href="{{ article.url }}">
+                        {% render 'responsive-image', image: article.image %}
+                      </a>
+                    </div>
+                  {% endif %}
+                  {% if block.settings.show_author or block.settings.show_date %}
+                    <span class="article-meta">
+                      {% if block.settings.show_author %}
+                        <span class="article-summary__author article-meta">{{ article.author }}</span>
+                      {% endif %}
+
+                      {% if block.settings.show_author and block.settings.show_date %}
+                        <span class="article-summary__divider">&middot;</span>
+                      {% endif %}
+
+                      {% if block.settings.show_date %}
+                        <date class="article-summary__date article-meta">{{ article.published_at | date: format: 'month_day_year' }}</date>
+                      {% endif %}
+                    </span>
+                  {% endif %}
+                  <h3 class="article-summary__title subtitle"><a href="{{ article.url }}">{{ article.title | strip_html | truncate: 30 }}</a></h3>
+                  <div class="article-summary__excerpt">
+                    {% unless article.excerpt == blank %}
+                      {{ article.excerpt }}
+                    {% else %}
+                      <p>{{ article.content | strip_html | truncatewords: 20 }}</p>
+                    {% endunless %}
+                  </div>
+                  <div class="article-summary__read-more">
+                    <a class="standard-link" href="{{ article.url }}">{{ 'blogs.article.read_more' | t }}</a>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+        {% when 'collection_list' %}
+          <div class="sidebar-block sidebar-block--collections {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            <h2 class="small-title">{{ block.settings.title }}</h2>
+            {% for i in (1..5) %}
+              {%- capture current -%}collection_{{ i }}{%- endcapture -%}
+              {%- assign collection = collections[block.settings[current]] -%}
+              {%- if collection != blank -%}
+                {%- if collection.image != blank -%}
+                  {%- assign image = collection.image -%}
+                {%- elsif collection.products != empty -%}
+                  {%- assign image = collection.products[0].featured_media.preview_image -%}
+                {%- endif -%}
+                {%- assign title = collections[block.settings[current]].title -%}
+                {%- render 'exp-tab', size: 'fill', type: 'collection', current: forloop.index, image: image, title: title, collection: collection  -%}
+              {%- endif -%}
+            {% endfor %}
+          </div>
+
+        {% when 'testimonial' %}
+          <div class="sidebar-block sidebar-block--testimonial {% unless block.settings.show_on_mobile %} desktop-only{% endunless %}" {{ block.shopify_attributes }}>
+            {% render 'testimonial',
+                        product: block.settings.testimonial_product,
+                        product_tab: block.settings.tab_products,
+                        stars: block.settings.testimonial_stars,
+                        comment: block.settings.testimonial_comment,
+                        author: block.settings.testimonial_author,
+                        author_location: block.settings.testimonial_location,
+                        author_image: block.settings.testimonial_author_image %}
+          </div>
+
+      {% endcase %}
+    {% endfor %}
+  </div>
+{% endif %}
+</section>
+
+{% schema %}
+{
+  "name": "Sidebar",
+  "class": "sidebar-container sidebar-container--left",
+  "max_blocks": 5,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "If the sidebar is empty or hidden, the page contents will expand to fill its place."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sidebar",
+      "label": "Show sidebar",
+      "default": true
+    },
+    {
+      "type": "paragraph",
+      "content": "Use checkboxes in each block to select which content to display on mobile. Sidebar content will display above the other homepage sections on mobile."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "url",
+          "id": "image_url",
+          "label": "Image link"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Rich text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Rich text"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Use this text to share information about your store with your customers.</p><p>Describe product, share announcements, or welcome customers to your store.</p>"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button text"
+        },
+        {
+          "type": "url",
+          "id": "button_url",
+          "label": "Button link"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "page",
+      "name": "Page",
+      "settings": [
+        {
+          "type": "page",
+          "id": "page_id",
+          "label": "Select page",
+          "info": "Display a page of content from your store"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "blog",
+      "name": "Latest blog posts",
+      "settings": [
+        {
+          "type": "blog",
+          "id": "blog_id",
+          "label": "Blog",
+          "info": "Display the latest articles from a blog in your sidebar"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_title",
+          "label": "Show title",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "blog_count_int",
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "label": "Number of articles to show",
+          "default": 1
+        },
+        {
+          "type": "checkbox",
+          "id": "show_date",
+          "label": "Show date",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_author",
+          "label": "Show author",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "article",
+      "name": "Featured articles",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading"
+        },
+        {
+          "type": "paragraph",
+          "content": "Add up to 3 articles to feature in the sidebar"
+        },
+        {
+          "type": "article",
+          "id": "sidebar_article_1",
+          "label": "Article 1"
+        },
+        {
+          "type": "article",
+          "id": "sidebar_article_2",
+          "label": "Article 2"
+        },
+        {
+          "type": "article",
+          "id": "sidebar_article_3",
+          "label": "Article 3"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_date",
+          "label": "Show date",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_author",
+          "label": "Show author",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "collection_list",
+      "name": "Mini collection list",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Collections"
+        },
+        {
+          "type": "paragraph",
+          "content": "Add up to 5 collections to feature in the sidebar"
+        },
+        {
+          "type": "collection",
+          "id": "collection_1",
+          "label": "Collection 1"
+        },
+        {
+          "type": "collection",
+          "id": "collection_2",
+          "label": "Collection 2"
+        },
+        {
+          "type": "collection",
+          "id": "collection_3",
+          "label": "Collection 3"
+        },
+        {
+          "type": "collection",
+          "id": "collection_4",
+          "label": "Collection 4"
+        },
+        {
+          "type": "collection",
+          "id": "collection_5",
+          "label": "Collection 5"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        {
+          "type": "product",
+          "id": "testimonial_product",
+          "label": "Product"
+        },
+        {
+          "type": "checkbox",
+          "id": "tab_products",
+          "label": "Show product in a card",
+          "default": true
+        },
+        {
+          "type": "range",
+          "id": "testimonial_stars",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "label": "Star rating",
+          "default": 5
+        },
+        {
+          "type": "richtext",
+          "id": "testimonial_comment",
+          "label": "Testimonial",
+          "default": "<p>Add customer reviews and testimonials to showcase your store’s happy customers.</p>"
+        },
+        {
+          "type": "header",
+          "content": "Author"
+        },
+        {
+          "type": "text",
+          "id": "testimonial_author",
+          "label": "Name",
+          "default": "Author's Name"
+        },
+        {
+          "type": "text",
+          "id": "testimonial_location",
+          "label": "Subtitle",
+          "info": "For example: Location, job title",
+          "default": "Location"
+        },
+        {
+          "type": "image_picker",
+          "id": "testimonial_author_image",
+          "label": "Profile image"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_on_mobile",
+          "label": "Show on mobile",
+          "default": false
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+

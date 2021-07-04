@@ -1,0 +1,224 @@
+<section class="page-footer page-width" data-section-id="{{ section.id }}" data-section-type="footer">
+  <div class="page-footer--content container">
+    <div class="footer-row flex-space-between relative {% if section.settings.text != blank or section.settings.show_footer_signup %}footer-row--mobile-border{% else %} footer-row--left {% endif %}">
+      {% if section.settings.text != blank or section.settings.show_footer_signup %}
+        <div class="one-quarter small-down--one-whole footer-column">
+          {% if section.settings.show_footer_signup %}
+            <div class="footer-subscribe {% if section.settings.text != blank %}footer-subscribe--margin-bottom{% endif %}">
+              <h3 class="footer-subscribe__title small-title">{{ section.settings.subscribe_title }}</h3>
+              {% assign form_id = section.id | prepend: "newsletter-signup-" %}
+              {% form 'customer', id: form_id %}
+                {% if form.posted_successfully? %}
+                  <div class="footer-subscribe__response subscribe-form__response--success">
+                    <h4>{{ 'general.newsletter.success' | t }}</h4>
+                  </div>
+                {% else %}
+                  {% if form.errors %}
+                    <div class="footer-subscribe__response">
+                      {% for field in form.errors %}
+                      <p class="error-message">{{ field | capitalize }} - {{ form.errors.messages[field] }}</p>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="relative footer-subscribe__input-container">
+                  <input type="hidden" id="contact_tags" name="contact[tags]" value="prospect,newsletter"/>
+
+                    <span class="subscribe__icon">{% render 'icon-mail' %}</span>
+                    <input type="email"
+                           required class="footer-subscribe__email required global-border-radius"
+                           value=""
+                           id="mailinglist_email"
+                           placeholder="{{ section.settings.subscribe_label }}"
+                           name="contact[email]"
+                           aria-label="{{ section.settings.subscribe_label | escape }}" />
+
+                  <button class="btn btn--primary btn--small footer-subscribe__submit" type="submit">{{ section.settings.subscribe_button }}</button>
+                  </div>
+                {% endif %}
+              {% endform %}
+              {% if section.settings.subscribe_description != blank %}
+                <div class="rte small-text">{{ section.settings.subscribe_description }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if section.settings.text != blank %}
+            <div class="rte footer-content">
+              {{ section.settings.text }}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+      <nav class="footer-nav {% if section.settings.show_footer_signup %} small-down--one-whole{% endif %}" aria-label="{{ 'general.accessibility_labels.footer_navigation' | t | escape }}">
+        {%- assign footer_linklist = section.settings.footer_linklist -%}
+        {% if linklists[footer_linklist].links.size > 0 %}
+          <ul class="flex-left-align">
+            {% for link in linklists[footer_linklist].links %}
+              {%- assign child_list_handle = link.title | handleize -%}
+              {% if menus[child_list_handle].links != blank %}
+                <li class="footer-nav__item footer-nav__item--with-children small-down--one-whole footer-nav__accordion {% if section.settings.show_footer_signup == true %} one-third{% else %} one-quarter{% endif %}">
+
+                  <a href="{{ link.url }}" class="footer-nav__link footer-nav__link--top">
+                    {{ link.title }}
+                  </a>
+                  <button class="icon feather-icon btn btn--plain mobile-footer-accordion-chevron js-footer-accordion-trigger" aria-label="{{ 'general.accessibility_labels.open_dropdown' | t }}">{% render 'svg-chevron-down' %}</button>
+                  <ul class="footer-nav__submenu">
+                    {% for childlink in menus[child_list_handle].links %}
+                      <li class="footer-nav__item footer-nav__subitem {% if childlink.active %}footer-nav--active{% endif %}">
+                        <a href="{{ childlink.url }}" class="footer-nav__link footer-nav__link--sub">{{ childlink.title | escape }}</a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </li>
+              {% else %}
+                <li class="footer-nav__item small-down--one-whole {% if section.settings.show_footer_signup == true %} one-third{% else %} one-quarter{% endif %}">
+                  <a href="{{ link.url }}" class="footer-nav__link footer-nav__link--top">{{ link.title }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </nav>
+    </div>
+    <footer class="flex-space-between">
+      <div class="footer-links flex-space-between">
+        <div class="one-half small-down--one-whole">
+          {% if section.settings.show_locale_selector or section.settings.show_currency_selector %}
+            <div class="footer-localization">
+              {% render 'localization', input_prefix: 'footer' %}
+            </div>
+          {% endif %}
+        </div>
+        {%- assign small_linklist = section.settings.small_linklist -%}
+        <div class="footer-links--small one-half small-down--one-whole">
+          {% if linklists[small_linklist].links.size > 0 %}
+            <nav class="small-down--one-whole" aria-label="{{ 'general.accessibility_labels.secondary_navigation' | t | escape }}">
+              <ul class="small-nav">
+                {% for link in linklists[small_linklist].links %}
+                  <li class="small-nav__item">
+                    <a class="small-nav__link small-text" href="{{ link.url }}">{{ link.title }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          {% endif %}
+          {% if section.settings.show_social_icons %}
+            {% capture icon_size %}{% if settings.soc_icons_double %}x46{% else %}x30{% endif %}{% endcapture %}
+            {% render 'social-icons', icon_setting: settings.social_custom_icon, icon_size: icon_size, container_class: 'small-down--one-whole' %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="footer-links flex-space-between">
+        <div class="copy small-down--one-whole">
+          <small class="copyright-text">{{ 'layout.footer.copyright' | t }} &copy; {{ 'now' | date: "%Y" }} <a href="{{ routes.root_url }}">{{ shop.name }}</a>.</small>
+
+          <small class="powered-by">{{ powered_by_link }}</small>
+
+        </div>
+
+        {% if section.settings.show_payment_icons %}
+          <div class="cards">
+            {% for type in shop.enabled_payment_types %}
+              {{ type | payment_type_svg_tag: class: 'payment-icon' }}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </footer>
+  </div>
+</section>
+
+{% schema %}
+  {
+    "name": "Footer",
+    "settings": [
+      {
+        "type": "link_list",
+        "id": "footer_linklist",
+        "label": "Primary menu",
+        "default": "footer",
+        "info": "This menu shows dropdown items in columns"
+      },
+      {
+        "type": "link_list",
+        "id": "small_linklist",
+        "label": "Secondary menu",
+        "info": "This menu does not show dropdown items"
+      },
+      {
+        "type": "richtext",
+        "id": "text",
+        "label": "Text"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_payment_icons",
+        "label": "Show payment icons",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_social_icons",
+        "label": "Show social icons",
+        "default": true
+      },
+      {
+         "type": "header",
+         "content": "Language Selector",
+         "info": "To add a language, go to your [language settings.](/admin/settings/languages)"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_locale_selector",
+        "label": "Show language selector",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "Currency Selector",
+        "info": "To add a currency, go to your [payment settings.](/admin/settings/payments)"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_currency_selector",
+        "label": "Show currency selector",
+        "info": "The currency selector requires the Shopify Payments payment provider. [Learn more](https://cleancanvas.co.uk/support/expression-currency-options)",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "Newsletter signup"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_footer_signup",
+        "label": "Show newsletter signup",
+        "default": false
+      },
+      {
+        "type": "text",
+        "id": "subscribe_title",
+        "label": "Heading",
+        "default": "Get updates"
+      },
+      {
+        "type": "text",
+        "id": "subscribe_label",
+        "label": "Label",
+        "default": "Email address"
+      },
+      {
+        "type": "text",
+        "id": "subscribe_button",
+        "label": "Submit button text",
+        "default": "Sign up"
+      },
+      {
+        "type": "richtext",
+        "id": "subscribe_description",
+        "label": "Subheading"
+      }
+    ]
+  }
+
+{% endschema %}

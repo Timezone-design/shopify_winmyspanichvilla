@@ -1,0 +1,107 @@
+{%- if section.settings.product_count == 2 -%}
+  {%- assign grid_class = 'one-half small-down--one-whole' -%}
+{%- elsif section.settings.product_count == 3 -%}
+  {%- assign grid_class = 'one-third small-down--one-half' -%}
+{%- elsif section.settings.product_count == 4 -%}
+  {%- assign grid_class = 'one-quarter small-down--one-half' -%}
+{%- endif -%}
+
+{% if section.settings.show_recommendations %}
+  <div class="product-recommendations" data-product-id="{{ product.id }}" data-limit="{{ section.settings.product_count }}" data-url="{{ routes.product_recommendations_url }}">
+    {% if recommendations.performed and recommendations.products_count > 0 %}
+      <div class="product-grid-container row related-products border-top">
+        <div class="section-heading">
+          <h2 class="section-heading__title standard-title">{{ section.settings.recommendations_title }}</h2>
+        </div>
+
+        <div class="grid grid--uniform product-grid product-grid--rows">
+          {%- for product in recommendations.products -%}
+            {%- render 'product-block', product: product, grid_class: grid_class -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+
+{% javascript %}
+var loadProductRecommendationsIntoSection = function() {
+  // Look for an element with class 'product-recommendations'
+  var productRecommendationsSection = document.querySelector(".product-recommendations");
+  if (productRecommendationsSection === null) { return; }
+  // Read product id from data attribute
+  var productId = productRecommendationsSection.dataset.productId;
+  // Read limit from data attribute
+  var limit = productRecommendationsSection.dataset.limit;
+  // Build request URL
+  var requestUrl = productRecommendationsSection.dataset.url + "?section_id=product-recommendations&limit=" + limit + "&product_id=" + productId;
+  // Create request and submit it using Ajax
+  var request = new XMLHttpRequest();
+  request.open("GET", requestUrl);
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 300) {
+      var container = document.createElement("div");
+      container.innerHTML = request.response;
+      var productRecommendationsParent = productRecommendationsSection.parentElement;
+      productRecommendationsParent.innerHTML = container.querySelector(".product-recommendations").innerHTML;
+      $(window).off('.productRecommendations');
+      theme.initProductTitleAlignmentWatcher(productRecommendationsParent, '.productRecommendations');
+    }
+  };
+  request.send();
+};
+// Reload the section in the editor when a setting changes
+document.addEventListener("shopify:section:load", function(event) {
+  if (event.detail.sectionId === "product-recommendations") {
+    loadProductRecommendationsIntoSection();
+  }
+});
+document.addEventListener("shopify:section:unload", function(event) {
+  if (event.detail.sectionId === "product-recommendations") {
+    $(window).off('.productRecommendations');
+  }
+});
+// Fetching the recommendations on page load
+document.addEventListener("DOMContentLoaded", function(event) {
+  loadProductRecommendationsIntoSection();
+});
+{% endjavascript %}
+
+
+{% schema %}
+  {
+    "name": "Product recommendations",
+    "class": "section-product-recommendations",
+    "settings": [
+      {
+        "type": "text",
+        "id": "recommendations_title",
+        "label": "Heading",
+        "default": "You may also like"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_recommendations",
+        "label": "Show recommendations",
+        "info": "Dynamic recommendations change and improve with time. [Learn more](https://help.shopify.com/en/themes/development/recommended-products)",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "product_count",
+        "min": 2,
+        "max": 4,
+        "step": 1,
+        "label": "Maximum number of recommended products",
+        "default": 4
+      },
+      {
+        "type": "checkbox",
+        "id": "show_vendor",
+        "label": "Show product vendors",
+        "default": false
+      }
+    ]
+  }
+{% endschema %}

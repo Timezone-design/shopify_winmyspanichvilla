@@ -1,0 +1,6 @@
+{% section 'product-template' %}
+{% section 'product-story' %}
+{% section 'product-recommendations' %}
+
+{% assign current_variant = product.selected_or_first_available_variant %}
+{% render 'structured-data-product', product: product, current_variant: current_variant %}

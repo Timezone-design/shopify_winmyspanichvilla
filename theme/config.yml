@@ -1,0 +1,6 @@
+development:
+  password: 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
+  theme_id: "120716591312"
+  store: winmyspanishvilla.myshopify.com
+  ignore_files:
+  - config/settings_data.json  
